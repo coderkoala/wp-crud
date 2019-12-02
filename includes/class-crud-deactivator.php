@@ -42,15 +42,18 @@ class Crud_Deactivator {
 
         try{
             $attempt = $wpdb->query($sql);
-            return $attempt;
+            return true;
         }
         catch(Exception $exception){
-            return ($exception->getMessage());
+            return false;
         }
     }
 
 	public static function wipe_db() {
-        self::destroyTable();
+        $deleted = self::destroyTable();
+        if($deleted = true){
+            delete_option('crud_db_migrated');
+        }
 	}
 
 }
