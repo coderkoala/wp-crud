@@ -74,8 +74,9 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-crud.php';
  * @since    1.0.0
  */
 function run_crud() {
-	$plugin = new Crud();
+	$plugin = Crud::getInstance();
 	$plugin->run();
-
 }
+
+// Init here
 run_crud();
