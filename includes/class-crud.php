@@ -153,6 +153,10 @@ class Crud {
 
 	}
 
+	private function fetchFromData(){
+//	    die('Yo, you reached the form data stuff haha!');
+    }
+
 	/**
 	 * Register all of the hooks related to the admin area functionality
 	 * of the plugin.
@@ -163,10 +167,10 @@ class Crud {
 	private function define_admin_hooks() {
 
 		$plugin_admin = new Crud_Admin( $this->get_plugin_name(), $this->get_version() );
-
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
+        // adds post data interception upon form submission
+//        add_action("admin_post_{$this->plugin_name}", array(&$this, 'fetchFromData'));
+        $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
 	}
 
 	/**
