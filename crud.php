@@ -25,6 +25,8 @@
  * Domain Path:       /languages
  */
 
+$tableName = null;
+
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
 	die;
@@ -43,7 +45,7 @@ define( 'CRUD_VERSION', '1.0.0' );
  */
 function activate_crud() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-crud-activator.php';
-	Crud_Activator::activate();
+    $tableName = Crud_Activator::activate();
 }
 
 /**
