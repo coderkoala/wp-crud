@@ -51,8 +51,8 @@ function activate_crud() {
  * This action is documented in includes/class-crud-deactivator.php
  */
 function deactivate_crud() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-crud-deactivator.php';
-	Crud_Deactivator::deactivate();
+    // pass
+    // @Todo handle deactivation differently from the uninstallation routines
 }
 
 register_activation_hook( __FILE__, 'activate_crud' );
