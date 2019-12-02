@@ -205,6 +205,9 @@ class Crud {
         
         } );
         });
+        $('#message').click(()=>{
+            $('#message').remove();
+        })
         </script>
     ";
     }
@@ -274,7 +277,7 @@ class Crud {
 	    global $wpdb;
         $message = '';
         $table = $wpdb->prefix. 'crud_students';
-	    if($_POST){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST'){
             $message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
 	        $tuple = array(
 	                'name' => '',
