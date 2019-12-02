@@ -29,3 +29,7 @@
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
+
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-crud-deactivator.php';
+	Crud_Deactivator::wipe_db();
+
