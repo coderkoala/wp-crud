@@ -43,19 +43,24 @@ class Crud_Activator {
             return true;
         }
         catch(Exception $exception){
-            return ($exception->getMessage());
+            return false;
         }
     }
 
     private static function migrateDB(){
-        if(!isset($is_migrated)){
+        $is_migrated = get_option('crud_db_migrated');
+        if(!$is_migrated){
             $dbCreated = self::createTable();
-            if($dbCreated === true)
-            return true;
+            if($dbCreated)
+                {
+                    $is_migrated = add_option('crud_db_migrated',$dbCreated);
+                }
             else
-                die('Something\'s wrong. Table couldn\'t be created.' );
+                {
+                    require_once plugin_dir_path( __FILE__ ) . 'includes/class-crud-deactivator.php';
+                    Crud_Deactivator::wipe_db();
+                }
         }
-        else return true;
     }
 
 	/**
