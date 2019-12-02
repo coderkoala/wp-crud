@@ -49,7 +49,7 @@ class Crud_Deactivator {
         }
     }
 
-	public static function deactivate() {
+	public static function wipe_db() {
         self::destroyTable();
 	}
 
