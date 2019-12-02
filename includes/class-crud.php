@@ -158,6 +158,57 @@ class Crud {
 	    die();
     }
 
+    private function formRender(&$message){
+	    echo $message;
+	    ?>
+        <br><form id="form" method="POST">
+            <input type="hidden" name="action" value="crud">
+            <label for="text1" class="col-4 col-form-label"><small>Name</small></label>
+            <input id="name" name="name" placeholder="name" type="text" class="form-control">
+            <label for="text" class="col-4 col-form-label"><small>Age</small></label>
+            <input id="age" name="age" placeholder="age" type="number" class="form-control">
+            <button name="submit" type="submit" class="button action" value="submit">Submit</button>
+        </form>
+        <?php
+    }
+
+    private function tableRender(&$table){
+	    global $wpdb;
+	    ?>
+        <br>
+        <table id="myTable" class="display" cellspacing="0" width="50%">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php
+        $data = $wpdb->get_results("SELECT name, age FROM `{$table}`");
+        foreach ($data as $dataTuple){
+            echo "<tr>
+                  <td>{$dataTuple->name}</td>
+                  <td>{$dataTuple->age}</td>
+                  </tr>";
+        }
+        echo"</tbody></table>
+
+        <script defer>
+        $(document).ready(function() {
+          var table = $('#myTable').DataTable({ 
+                select: false,
+            });
+        
+          $('#myTable tbody').on( 'click', 'tr', function () {
+           alert(table.row( this ).data()[0]);
+        
+        } );
+        });
+        </script>
+    ";
+    }
+
 	/**
 	 * Register all of the hooks related to the admin area functionality
 	 * of the plugin.
@@ -213,49 +264,28 @@ class Crud {
 	}
 
 	public function view_students(){
+        ;?>
+        <div class="row">
+            <div class="col">
+                <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
+            </div>
+        </div>
+        <?php
 	    global $wpdb;
+        $message = '';
+        $table = $wpdb->prefix. 'crud_students';
 	    if($_POST){
+            $message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
 	        $tuple = array(
 	                'name' => '',
                     'age' => ''
             );
             $dbData = shortcode_atts($tuple, $_REQUEST);
-            ?>
-            <div id="message" class="updated"><p>Successfully Added new Student</p></div>
-            <?php
-            $wpdb->insert($wpdb->prefix. 'crud_students', $dbData);
+            $wpdb->insert($table, $dbData);
         }
-	    ;?>
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
-                </div>
-            </div>
-            <form id="form" method="POST">
-<!--            <form action="--><?php //echo esc_url( admin_url('admin-post.php') ); ?><!--">-->
-                <input type="hidden" name="action" value="crud">
-                <div class="form-group row">
-                    <label for="text1" class="col-4 col-form-label">Name</label>
-                    <div class="col-8">
-                        <input id="name" name="name" placeholder="Please place your name here" type="text" class="form-control">
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="text" class="col-4 col-form-label">Age</label>
-                    <div class="col-8">
-                        <input id="age" name="age" placeholder="Please place your age here" type="number" class="form-control">
-                    </div>
-                </div>
-                <br>
-                <div class="form-group row">
-                    <div class="offset-4 col-8">
-                        <button name="submit" type="submit" class="button action" value="submit">Submit</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <?php
+
+        self::formRender($message);
+	    self::tableRender($table);
     }
 
 	public function addBackendTab(){
