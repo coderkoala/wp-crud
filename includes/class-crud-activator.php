@@ -71,7 +71,9 @@ class Crud_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-        self::migrateDB();
+        global $wpdb;
+	    self::migrateDB();
+        return $wpdb->prefix. 'crud_students';
 	}
 
 }
