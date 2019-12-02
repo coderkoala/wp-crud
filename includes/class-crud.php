@@ -154,7 +154,8 @@ class Crud {
 	}
 
 	private function fetchFromData(){
-//	    die('Yo, you reached the form data stuff haha!');
+	    print_r($_POST['name']);
+	    die();
     }
 
 	/**
@@ -165,13 +166,35 @@ class Crud {
 	 * @access   private
 	 */
 	private function define_admin_hooks() {
-
 		$plugin_admin = new Crud_Admin( $this->get_plugin_name(), $this->get_version() );
         // adds post data interception upon form submission
-//        add_action("admin_post_{$this->plugin_name}", array(&$this, 'fetchFromData'));
+        add_action('admin_menu', array(&$this, 'addBackendTab'));
+//        Currently no plans to use ajax, might use later
+//        add_action('admin_post_crud', array(&$this, 'fetchFromData'));
+//        add_action('admin_post_nopriv_crud', array(&$this, 'fetchFromData'));
         $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 	}
+
+	function enqueue_styles(){
+        wp_register_style(
+                "my-test-style",
+                plugins_url() . '/crud/assets/css/datatables.min.css',
+                array(),
+                1.0,
+                true
+        );
+    }
+
+	function enqueue_scripts(){
+        wp_enqueue_script(
+            "my_test_script",
+            plugins_url().'/crud/assets/js/datatables.min.js',
+            array( 'jquery' ),
+            1.0,
+            true
+        );
+    }
 
 	/**
 	 * Register all of the hooks related to the public-facing functionality
@@ -190,6 +213,18 @@ class Crud {
 	}
 
 	public function view_students(){
+	    global $wpdb;
+	    if($_POST){
+	        $tuple = array(
+	                'name' => '',
+                    'age' => ''
+            );
+            $dbData = shortcode_atts($tuple, $_REQUEST);
+            ?>
+            <div id="message" class="updated"><p>Successfully Added new Student</p></div>
+            <?php
+            $wpdb->insert($wpdb->prefix. 'crud_students', $dbData);
+        }
 	    ;?>
         <div class="container">
             <div class="row">
@@ -197,24 +232,25 @@ class Crud {
                     <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
                 </div>
             </div>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
+            <form id="form" method="POST">
+<!--            <form action="--><?php //echo esc_url( admin_url('admin-post.php') ); ?><!--">-->
                 <input type="hidden" name="action" value="crud">
                 <div class="form-group row">
                     <label for="text1" class="col-4 col-form-label">Name</label>
                     <div class="col-8">
-                        <input id="text1" name="text1" placeholder="Please place your name here" type="text" class="form-control">
+                        <input id="name" name="name" placeholder="Please place your name here" type="text" class="form-control">
                     </div>
                 </div>
                 <div class="form-group row">
                     <label for="text" class="col-4 col-form-label">Age</label>
                     <div class="col-8">
-                        <input id="text" name="int" placeholder="Please place your age here" type="text" class="form-control">
+                        <input id="age" name="age" placeholder="Please place your age here" type="number" class="form-control">
                     </div>
                 </div>
                 <br>
                 <div class="form-group row">
                     <div class="offset-4 col-8">
-                        <button name="submit" type="submit" class="button action">Submit</button>
+                        <button name="submit" type="submit" class="button action" value="submit">Submit</button>
                     </div>
                 </div>
             </form>
@@ -233,8 +269,7 @@ class Crud {
 	 */
 	public function run() {
 		$this->loader->run();
-		add_action('admin_menu', array(&$this, 'addBackendTab'));
-	}
+    }
 
 	/**
 	 * The name of the plugin used to uniquely identify it within the context of
