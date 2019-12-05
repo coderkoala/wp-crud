@@ -75,8 +75,6 @@ class Crud {
 			$this->version = '1.0.0';
 		}
 		$this->plugin_name = 'crud';
-
-		$this->addBackendTab();
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_public_hooks();
@@ -219,6 +217,7 @@ class Crud {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
+		add_action('admin_menu', array($this, 'addBackendTab'), 8);
 		add_action( 'wp_enqueue_styles', array($this, 'enqueue_styles') );
 		add_action( 'wp_enqueue_scripts', array($this, 'enqueue_scripts') );
 	}
@@ -271,7 +270,8 @@ class Crud {
     }
 
 	function addBackendTab(){
-        add_menu_page( __('Crud'), __('Crud'), 'manage_options', 'crud', array(&$this,'view_students'));
+	    $icon = 'dashicons-admin-site-alt';
+        add_menu_page( __('Crud'), __('Crud'), 'manage_options', 'crud', array(&$this,'view_students'), $icon, 44);
     }
 
 	/**
