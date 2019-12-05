@@ -76,9 +76,9 @@ class Crud {
 		}
 		$this->plugin_name = 'crud';
 
+		$this->addBackendTab();
 		$this->load_dependencies();
 		$this->set_locale();
-		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
 
@@ -148,7 +148,6 @@ class Crud {
 	private function set_locale() {
 
 		$plugin_i18n = new Crud_i18n();
-
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
@@ -213,44 +212,6 @@ class Crud {
     }
 
 	/**
-	 * Register all of the hooks related to the admin area functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_admin_hooks() {
-		$plugin_admin = new Crud_Admin( $this->get_plugin_name(), $this->get_version() );
-        // adds post data interception upon form submission
-        add_action('admin_menu', array(&$this, 'addBackendTab'));
-//        Currently no plans to use ajax, might use later
-//        add_action('admin_post_crud', array(&$this, 'fetchFromData'));
-//        add_action('admin_post_nopriv_crud', array(&$this, 'fetchFromData'));
-        $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-	}
-
-	function enqueue_styles(){
-        wp_register_style(
-                "my-test-style",
-                plugins_url() . '/crud/assets/css/datatables.min.css',
-                array(),
-                1.0,
-                true
-        );
-    }
-
-	function enqueue_scripts(){
-        wp_enqueue_script(
-            "my_test_script",
-            plugins_url().'/crud/assets/js/datatables.min.js',
-            array( 'jquery' ),
-            1.0,
-            true
-        );
-    }
-
-	/**
 	 * Register all of the hooks related to the public-facing functionality
 	 * of the plugin.
 	 *
@@ -258,12 +219,30 @@ class Crud {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
+		add_action( 'wp_enqueue_styles', array($this, 'enqueue_styles') );
+		add_action( 'wp_enqueue_scripts', array($this, 'enqueue_scripts') );
+	}
 
-		$plugin_public = new Crud_Public( $this->get_plugin_name(), $this->get_version() );
+	function enqueue_styles(){
+		$path = ABSPATH . 'wp-content/plugins/'.$this->plugin_name.'/admin/css/crud-admin.css';
+		$registered = wp_register_style(
+			"my_test_style",
+			$path,
+			array(),
+			$this->get_version(),
+			true
+		);
+	}
 
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
+	function enqueue_scripts(){
+		$path = ABSPATH . 'wp-content/plugins/'.$this->plugin_name.'/admin/js/crud-admin.js';
+		$registered = wp_enqueue_script(
+			"my_test_script",
+			$path,
+			array( 'jquery' ),
+			1.0,
+			true
+		);
 	}
 
 	public function view_students(){
@@ -291,8 +270,8 @@ class Crud {
 	    self::tableRender($table);
     }
 
-	public function addBackendTab(){
-        add_menu_page( __('Students CRUD'), __('Students CRUD'), 'manage_options', 'crud_students', array(&$this,'view_students'));
+	function addBackendTab(){
+        add_menu_page( __('Crud'), __('Crud'), 'manage_options', 'crud', array(&$this,'view_students'));
     }
 
 	/**
