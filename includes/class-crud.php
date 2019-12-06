@@ -60,6 +60,33 @@ class Crud {
 	protected $version;
 
 	/**
+	 * The instance of table data useful for doing various crud operations.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      array    $data    The current version of the plugin.
+	 */
+	protected $data;
+
+	/**
+	 * Maintains the tablename.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $table    The current version of the plugin.
+	 */
+	protected $table;
+
+	/**
+	 * Stores the message for the message throughout the object's lifespan.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $table    The current version of the plugin.
+	 */
+	protected $message;
+
+	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
@@ -69,11 +96,13 @@ class Crud {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
+		global $wpdb;
 		if ( defined( 'CRUD_VERSION' ) ) {
 			$this->version = CRUD_VERSION;
 		} else {
 			$this->version = '1.0.0';
 		}
+		$this->table = $wpdb->prefix. 'crud_students';
 		$this->plugin_name = 'crud';
 		$this->load_dependencies();
 		$this->set_locale();
@@ -156,7 +185,7 @@ class Crud {
 	    die();
     }
 
-    private function formRender(&$message){
+    private function formRender(){
 	    ?>
 	    <div class="row">
 		    <div class="col">
@@ -164,7 +193,7 @@ class Crud {
 		    </div>
 	    </div>
 	    <?php
-	    echo $message;
+	    echo $this->message;
 	    ?>
         <hr><form class="pt-3" id="form" method="POST">
             <input type="hidden" name="action" value="crud">
@@ -177,8 +206,7 @@ class Crud {
         <?php
     }
 
-    private function tableRender(&$table, &$data){
-	    global $wpdb;
+    private function tableRender(){
 	    ?>
         <br>
         <table id="myTable" class="display" cellspacing="0" width="50%">
@@ -190,7 +218,7 @@ class Crud {
         </thead>
         <tbody>
         <?php
-        foreach ($data as $dataTuple){
+        foreach ($this->data as $dataTuple){
 	        echo "<tr><td>";esc_html_e($dataTuple->name);
             echo  "</td>
                   <td>";esc_html_e($dataTuple->age);
@@ -266,26 +294,28 @@ class Crud {
 			dd($tuple->name);
     }
 
+    function renderHeader(){
+	    global $wpdb;
+	    $this->data = $wpdb->get_results("SELECT name, age FROM `{$this->table}`");
+	    if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+		    $this->message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
+		    try {
+			    $tuple = array(
+				    'name' => $_POST['name'],
+				    'age' => $_POST['age']
+			    );
+			    $this->validateData($tuple);
+			    $wpdb->insert($this->table, $tuple);
+		    }catch (Exception $exception){
+			    $this->message = "<div id='message' class='error'>".$exception->getMessage()."</p></div>";
+		    }
+	    }
+    }
+
 	public function view_students(){
-		global $wpdb;
-		$message = '';
-		$table = $wpdb->prefix. 'crud_students';
-		$data = $wpdb->get_results("SELECT name, age FROM `{$table}`");
-		if ($_SERVER['REQUEST_METHOD'] === 'POST'){
-			$message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
-			try {
-				$tuple = array(
-				'name' => $_POST['name'],
-				'age' => $_POST['age']
-			);
-			$this->validateData($tuple);
-			$wpdb->insert($table, $tuple);
-			}catch (Exception $exception){
-				$message = "<div id='message' class='error'>".$exception->getMessage()."</p></div>";
-			}
-		}
-        self::formRender($message);
-	    self::tableRender($table,$data);
+		$this->renderHeader();
+		$this->formRender();
+		$this->tableRender();
     }
 
 	function addBackendTab(){
