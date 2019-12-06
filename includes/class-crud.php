@@ -84,7 +84,7 @@ class Crud {
 	 * @access   protected
 	 * @var      string    $table    The current version of the plugin.
 	 */
-	protected $message;
+	protected $message = '';
 
 	/**
 	 * Define the core functionality of the plugin.
@@ -182,7 +182,7 @@ class Crud {
 
 	private function fetchFromData(){
 	    print_r($_POST['name']);
-	    die();
+	    dd();
     }
 
     private function formRender(){
@@ -207,9 +207,11 @@ class Crud {
     }
 
     private function tableRender(){
+		global $wpdb;
+	    $this->data = $wpdb->get_results("SELECT name, age FROM `{$this->table}`");
 	    ?>
         <br>
-        <table id="myTable" class="display" cellspacing="0" width="50%">
+        <table id="myTable" class="display" cellspacing="0" width="40%">
         <thead>
         <tr>
             <th>Name</th>
@@ -289,14 +291,30 @@ class Crud {
     }
     }
 
+    /*
+     * @return string/boolean, based on success/error
+     */
     function validateData(&$tuple){
-		if($tuple->name)
-			dd($tuple->name);
+
+		$safeAge = intval($tuple['age']);
+		// The use
+		if($safeAge > 18 && $safeAge <= 122)
+		{
+			$tuple['age'] = $safeAge;
+		}
+		else
+			return 'Invalid age Passed. Please retry with a valid age.';
+
+		if(!empty($tuple['name'])){
+			$safeName = sanitize_text_field($tuple['name']);
+		}
+		else return 'Invalid name Passed. Please retry with a valid name.';
+
+		return true;
     }
 
     function renderHeader(){
 	    global $wpdb;
-	    $this->data = $wpdb->get_results("SELECT name, age FROM `{$this->table}`");
 	    if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 		    $this->message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
 		    try {
@@ -304,8 +322,11 @@ class Crud {
 				    'name' => $_POST['name'],
 				    'age' => $_POST['age']
 			    );
-			    $this->validateData($tuple);
+			    $validation = $this->validateData($tuple);
+			    if($validation === true)
 			    $wpdb->insert($this->table, $tuple);
+			    else
+			    	throw new Exception($validation);
 		    }catch (Exception $exception){
 			    $this->message = "<div id='message' class='error'>".$exception->getMessage()."</p></div>";
 		    }
