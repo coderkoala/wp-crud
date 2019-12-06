@@ -200,18 +200,18 @@ class Crud {
         echo"</tbody></table>
 
         <script defer>
-        $(document).ready(function() {
-          var table = $('#myTable').DataTable({ 
+        jQuery(document).ready(function() {
+          var table = jQuery('#myTable').DataTable({ 
                 select: false,
             });
         
-          $('#myTable tbody').on( 'click', 'tr', function () {
+          jQuery('#myTable tbody').on( 'click', 'tr', function () {
            alert(table.row( this ).data()[0]);
         
         } );
         });
-        $('#message').click(()=>{
-            $('#message').remove();
+        jQuery('#message').click(()=>{
+            jQuery('#message').remove();
         })
         </script>
     ";
@@ -247,7 +247,7 @@ class Crud {
 		wp_register_script(
 			'scripts-crud',
 			$aka,
-            null,
+            array('jquery'),
             1.0
 		);
 	}
@@ -267,7 +267,6 @@ class Crud {
     }
 
 	public function view_students(){
-		dd();
 		global $wpdb;
 		$message = '';
 		$table = $wpdb->prefix. 'crud_students';
