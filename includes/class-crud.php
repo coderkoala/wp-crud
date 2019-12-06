@@ -60,6 +60,33 @@ class Crud {
 	protected $version;
 
 	/**
+	 * The instance of table data useful for doing various crud operations.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      array    $data    The current version of the plugin.
+	 */
+	protected $data;
+
+	/**
+	 * Maintains the tablename.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $table    The current version of the plugin.
+	 */
+	protected $table;
+
+	/**
+	 * Stores the message for the message throughout the object's lifespan.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $table    The current version of the plugin.
+	 */
+	protected $message = '';
+
+	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
@@ -69,17 +96,18 @@ class Crud {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
+		global $wpdb;
 		if ( defined( 'CRUD_VERSION' ) ) {
 			$this->version = CRUD_VERSION;
 		} else {
 			$this->version = '1.0.0';
 		}
+		$this->table = $wpdb->prefix. 'crud_students';
 		$this->plugin_name = 'crud';
-
 		$this->load_dependencies();
 		$this->set_locale();
-		$this->define_admin_hooks();
 		$this->define_public_hooks();
+		add_action( 'admin_enqueue_scripts', array($this, 'initialize_scripts') );
 	}
 
 	/*  Singleton class routine
@@ -148,20 +176,26 @@ class Crud {
 	private function set_locale() {
 
 		$plugin_i18n = new Crud_i18n();
-
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
 
 	private function fetchFromData(){
 	    print_r($_POST['name']);
-	    die();
+	    dd();
     }
 
-    private function formRender(&$message){
-	    echo $message;
+    private function formRender(){
 	    ?>
-        <br><form id="form" method="POST">
+	    <div class="row">
+		    <div class="col">
+			    <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
+		    </div>
+	    </div>
+	    <?php
+	    echo $this->message;
+	    ?>
+        <hr><form class="pt-3" id="form" method="POST">
             <input type="hidden" name="action" value="crud">
             <label for="text1" class="col-4 col-form-label"><small>Name</small></label>
             <input id="name" name="name" placeholder="name" type="text" class="form-control">
@@ -172,11 +206,12 @@ class Crud {
         <?php
     }
 
-    private function tableRender(&$table){
-	    global $wpdb;
+    private function tableRender(){
+		global $wpdb;
+	    $this->data = $wpdb->get_results("SELECT name, age FROM `{$this->table}`");
 	    ?>
         <br>
-        <table id="myTable" class="display" cellspacing="0" width="50%">
+        <table id="myTable" class="display" cellspacing="0" width="40%">
         <thead>
         <tr>
             <th>Name</th>
@@ -185,69 +220,31 @@ class Crud {
         </thead>
         <tbody>
         <?php
-        $data = $wpdb->get_results("SELECT name, age FROM `{$table}`");
-        foreach ($data as $dataTuple){
-            echo "<tr>
-                  <td>{$dataTuple->name}</td>
-                  <td>{$dataTuple->age}</td>
+        foreach ($this->data as $dataTuple){
+	        echo "<tr><td>";esc_html_e($dataTuple->name);
+            echo  "</td>
+                  <td>";esc_html_e($dataTuple->age);
+            echo  "</td>
                   </tr>";
         }
         echo"</tbody></table>
 
         <script defer>
-        $(document).ready(function() {
-          var table = $('#myTable').DataTable({ 
+        jQuery(document).ready(function() {
+          var table = jQuery('#myTable').DataTable({ 
                 select: false,
             });
         
-          $('#myTable tbody').on( 'click', 'tr', function () {
+          jQuery('#myTable tbody').on( 'click', 'tr', function () {
            alert(table.row( this ).data()[0]);
         
         } );
         });
-        $('#message').click(()=>{
-            $('#message').remove();
+        jQuery('#message').click(()=>{
+            jQuery('#message').remove();
         })
         </script>
     ";
-    }
-
-	/**
-	 * Register all of the hooks related to the admin area functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_admin_hooks() {
-		$plugin_admin = new Crud_Admin( $this->get_plugin_name(), $this->get_version() );
-        // adds post data interception upon form submission
-        add_action('admin_menu', array(&$this, 'addBackendTab'));
-//        Currently no plans to use ajax, might use later
-//        add_action('admin_post_crud', array(&$this, 'fetchFromData'));
-//        add_action('admin_post_nopriv_crud', array(&$this, 'fetchFromData'));
-        $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-	}
-
-	function enqueue_styles(){
-        wp_register_style(
-                "my-test-style",
-                plugins_url() . '/crud/assets/css/datatables.min.css',
-                array(),
-                1.0,
-                true
-        );
-    }
-
-	function enqueue_scripts(){
-        wp_enqueue_script(
-            "my_test_script",
-            plugins_url().'/crud/assets/js/datatables.min.js',
-            array( 'jquery' ),
-            1.0,
-            true
-        );
     }
 
 	/**
@@ -258,41 +255,93 @@ class Crud {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
-
-		$plugin_public = new Crud_Public( $this->get_plugin_name(), $this->get_version() );
-
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
+		add_action('admin_menu', array($this, 'addBackendTab'), 8);
+		add_action( 'admin_enqueue_scripts', array($this, 'register_styles') );
+		add_action( 'admin_enqueue_scripts', array($this, 'register_scripts') );
 	}
 
-	public function view_students(){
-        ;?>
-        <div class="row">
-            <div class="col">
-                <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
-            </div>
-        </div>
-        <?php
-	    global $wpdb;
-        $message = '';
-        $table = $wpdb->prefix. 'crud_students';
-        if ($_SERVER['REQUEST_METHOD'] === 'POST'){
-            $message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
-	        $tuple = array(
-	                'name' => '',
-                    'age' => ''
-            );
-            $dbData = shortcode_atts($tuple, $_REQUEST);
-            $wpdb->insert($table, $dbData);
-        }
-
-        self::formRender($message);
-	    self::tableRender($table);
+	function returnPath(){
+		return content_url().'/plugins/nobel/admin/';
     }
 
-	public function addBackendTab(){
-        add_menu_page( __('Students CRUD'), __('Students CRUD'), 'manage_options', 'crud_students', array(&$this,'view_students'));
+	function register_styles(){
+	    $aka = $this->returnPath() . 'css/crud-admin.css';
+		wp_register_style(
+			'styles-crud',
+			$aka
+        );
+	}
+
+	function register_scripts(){
+		$aka = $this->returnPath() . 'js/crud-admin.js';
+		wp_register_script(
+			'scripts-crud',
+			$aka,
+            array('jquery'),
+            1.0
+		);
+	}
+
+	function initialize_scripts(){
+	try{
+		wp_enqueue_style('styles-crud');
+		wp_enqueue_script('scripts-crud');
+	}catch(Exception $e){
+	    dd($e->getMessage());
+    }
+    }
+
+    /*
+     * @return string/boolean, based on success/error
+     */
+    function validateData(&$tuple){
+
+		$safeAge = intval($tuple['age']);
+		// The use
+		if($safeAge > 18 && $safeAge <= 122)
+		{
+			$tuple['age'] = $safeAge;
+		}
+		else
+			return 'Invalid age Passed. Please retry with a valid age.';
+
+		if(!empty($tuple['name'])){
+			$safeName = sanitize_text_field($tuple['name']);
+		}
+		else return 'Invalid name Passed. Please retry with a valid name.';
+
+		return true;
+    }
+
+    function renderHeader(){
+	    global $wpdb;
+	    if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+		    $this->message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
+		    try {
+			    $tuple = array(
+				    'name' => $_POST['name'],
+				    'age' => $_POST['age']
+			    );
+			    $validation = $this->validateData($tuple);
+			    if($validation === true)
+			    $wpdb->insert($this->table, $tuple);
+			    else
+			    	throw new Exception($validation);
+		    }catch (Exception $exception){
+			    $this->message = "<div id='message' class='error'>".$exception->getMessage()."</p></div>";
+		    }
+	    }
+    }
+
+	public function view_students(){
+		$this->renderHeader();
+		$this->formRender();
+		$this->tableRender();
+    }
+
+	function addBackendTab(){
+	    $icon = 'dashicons-admin-site-alt';
+        add_menu_page( __('Crud'), __('Crud'), 'manage_options', 'crud', array(&$this,'view_students'), $icon, 44);
     }
 
 	/**
