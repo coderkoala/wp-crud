@@ -189,7 +189,7 @@ class Crud {
 	    ?>
 	    <div class="row">
 		    <div class="col">
-			    <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4><hr></div>
+			    <div class="text-muted text-center pt-3 pb-5"><h4>Students CRUD</h4></div>
 		    </div>
 	    </div>
 	    <?php
@@ -317,14 +317,14 @@ class Crud {
 	    global $wpdb;
 	    if ($_SERVER['REQUEST_METHOD'] === 'POST'){
 		    $this->message = "<div id='message' class='updated'><p>Successfully Added new Student</p></div>";
+		    $tuple = array(
+			    'name' => $_POST['name'],
+			    'age' => $_POST['age']
+		    );
 		    try {
-			    $tuple = array(
-				    'name' => $_POST['name'],
-				    'age' => $_POST['age']
-			    );
 			    $validation = $this->validateData($tuple);
 			    if($validation === true)
-			    $wpdb->insert($this->table, $tuple);
+			        $wpdb->insert($this->table, $tuple);
 			    else
 			    	throw new Exception($validation);
 		    }catch (Exception $exception){
